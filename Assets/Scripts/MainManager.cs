@@ -12,18 +12,20 @@ public class MainManager : MonoBehaviour
 
     public Text ScoreText;
     public GameObject GameOverText;
+    public Text HighScoreText;
     
     private bool m_Started = false;
     private int m_Points;
     
     private bool m_GameOver = false;
-
     
     // Start is called before the first frame update
     void Start()
     {
+        PersistenceManager.Instance.LoadScore();
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
+        HighScoreText.text = ("Best Score: " + PersistenceManager.Instance.highScoreName + " : " + PersistenceManager.Instance.highestScore);
         
         int[] pointCountArray = new [] {1,1,2,2,5,5};
         for (int i = 0; i < LineCount; ++i)
@@ -57,7 +59,7 @@ public class MainManager : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                SceneManager.LoadScene(0);
             }
         }
     }
@@ -68,9 +70,24 @@ public class MainManager : MonoBehaviour
         ScoreText.text = $"Score : {m_Points}";
     }
 
+    // Replaces high score if new score surpasses it, otherwise leaves it alone
+    public void CheckHighScore()
+    {
+        PersistenceManager persistentData = PersistenceManager.Instance;
+        int currentHighScore = persistentData.highestScore;
+        if(currentHighScore < m_Points)
+        {
+            HighScoreText.text = ("New High Score! " + persistentData.playerName + " : " + m_Points);
+            persistentData.highestScore = m_Points;
+            persistentData.highScoreName = persistentData.playerName;
+        }
+        PersistenceManager.Instance.SaveScore();
+    }
+
     public void GameOver()
     {
         m_GameOver = true;
+        CheckHighScore();
         GameOverText.SetActive(true);
     }
 }
